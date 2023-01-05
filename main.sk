@@ -19,7 +19,7 @@ on rightclick:
 				broadcast "{@Spy} &c%player% &f님이 트롤 감지 시스템으로 인해 게임에서 추방되었습니다."
 				make player run cmd "/clear @s" as op
 				make player run cmd "/tp @s 2480 113 -1240" as op
-				kick the player due to "{@Spy}%nl%&a당신은 트롤 감지로 해당 게임에서 추방되었습니다.%nl%&c해당 게임은 트롤 감지를 위해 게임 시작 후 3초 이내에 총을 발사하시면 강제로 추방됩니다.%nl%%nl%&7제작자 - 필압 PIL_AB"
+				kick the player due to "{@Spy}%nl%&a당신은 트롤 감지로 해당 게임에서 추방되었습니다.%nl%&c해당 게임은 트롤 감지를 위해 게임 시작 후 3초 이내에 총을 발사하시면 강제로 추방됩니다."
 				stop
 			else:
 				remove 1 of player's tool from player's tool
