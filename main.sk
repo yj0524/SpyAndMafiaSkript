@@ -1,0 +1,187 @@
+options:
+	Spy : &7[&c스파이&7]&f
+
+on rightclick:
+	if tool is ender eye:
+		send "{@Spy} &e스파이의 정보력."
+		make player run cmd "/effect give @a[gamemode=!spectator] minecraft:glowing 10 0 true" as op
+		remove 1 of player's tool from player's tool
+
+	if tool is book:
+		if {%player%.머더} is set:
+			send "{@Spy} 스파이는 권총을 사용할 수 없습니다!" to player
+			cancel event
+			stop
+
+		else:
+			if {트롤감지.%player%} is set:
+				delete {트롤감지.%player%}
+				broadcast "{@Spy} &c%player% &f님이 트롤 감지 시스템으로 인해 게임에서 추방되었습니다."
+				make player run cmd "/clear @s" as op
+				make player run cmd "/tp @s 2480 113 -1240" as op
+				kick the player due to "{@Spy}%nl%&a당신은 트롤 감지로 해당 게임에서 추방되었습니다.%nl%&c해당 게임은 트롤 감지를 위해 게임 시작 후 3초 이내에 총을 발사하시면 강제로 추방됩니다.%nl%%nl%&7제작자 - 필압 PIL_AB"
+				stop
+			else:
+				remove 1 of player's tool from player's tool
+				play sound "entity_firework_rocket_blast" with volume 100 and pitch 1 at player
+				loop 15 times:
+					make player run cmd "/particle minecraft:dust 1 1 1 0.5 ^ ^1.5 ^%loop-number+0.2% 0 0 0 0 100" as op
+					if distance between player and target living entity is less than loop-number:
+						damage target living entity by 999
+						if {%name of target%.머더} is not set:
+							remove 1 from {인원}
+							remove 1 from {인원}
+							make player run cmd "/gamemode spectator %player%" as op
+							make player run cmd "/gamemode spectator %name of target%" as op
+							send title "{@Spy}" with subtitle "&c이런! 선량한 마피아를 향해 쏘셨군요!" to player for 5 seconds
+							send title "{@Spy}" with subtitle "&c이런! 다른 마피아가 당신을 처참하게 죽였습니다!" to target living entity for 5 seconds
+							if {인원} <= 1:
+								send title "&c스파이 승리" with subtitle "&7이런! 모든 마피아가 서로를 죽였습니다!" to all players for 5 seconds
+								delete {초}
+								delete {인원}
+								loop all players:
+									delete {%loop-player%.머더}
+								make player run cmd "/tp @a 2480 113 -1240" as op
+								make player run cmd "/gamemode adventure @a" as op
+								make player run cmd "/clear @a" as op
+								stop
+
+						if {%name of target%.머더} is set:
+							send title "{@Spy}" with subtitle "&c이런! 다른 마피아가 당신을 향해 쏜 총에 맞으셨군요!" to {%name of target%.머더} for 5 seconds
+							send title "&a마피아들의 승리" with subtitle "&7%player%님이 스파이를 살해했습니다!" to all players for 5 seconds
+							delete {초}
+							delete {인원}
+							loop all players:
+								delete {%loop-player%.머더}
+							make player run cmd "/tp @a 2480 113 -1240" as op
+							make player run cmd "/gamemode adventure @a" as op
+							make player run cmd "/clear @a" as op
+							stop
+
+on drop:
+	cancel event
+
+on damage:
+	if {%attacker%.머더} is set:
+		if attacker's tool is not iron sword:
+			send "{@Spy} 스파이의 검으로만 살해할 수 있습니다." to attacker
+			cancel event
+			stop
+
+		else:
+			remove 1 from {인원}
+			set damage to 999
+			make attacker run cmd "/effect give @s minecraft:speed 3 1 true" as op
+			send title "{@Spy}" with subtitle "&c이런! 스파이가 당신을 잔혹하게 살해했습니다!" to victim for 5 seconds
+			if {인원} <= 1:
+				send title "&c스파이 승리" with subtitle "&7스파이가 모든 마피아를 살해했습니다!" to all players for 5 seconds
+				delete {초}
+				delete {인원}
+				delete {%attacker%.머더}
+				make attacker run cmd "/tp @a 2480 113 -1240" as op
+				make attacker run cmd "/gamemode adventure @a" as op
+				make attacker run cmd "/clear @a" as op
+				stop
+	else:
+		cancel event
+
+on death of player:
+	set {_죽음.%player%} to player's location
+	teleport the player to {_죽음.%player%}
+	make player run cmd "/gamemode spectator %player%" as op
+	stop
+
+every 1 seconds:
+	if {초} is set:
+		loop all players:
+			if {초} <= 10:
+				send action bar "&7[ &f남은 시간 - &c%{초}%&f초 &7]" to loop-player
+				play sound "ui_button_click" with volume 100 and pitch 1 at loop-player
+			else:
+				send action bar "&7[ &f남은 시간 - &a%{초}%&f초 &7]" to loop-player
+	else:
+		stop
+
+every 1 seconds:
+	if {초} is set:
+		remove 1 from {초}
+		if {초} = -1:
+			loop all players:
+				send title "&a마피아들의 승리" with subtitle "&7시간 초과!" to all players for 5 seconds
+				delete {초}
+				delete {인원}
+				delete {%loop-player%.머더}
+				make loop-player run cmd "/tp @a 2480 113 -1240" as op
+				make loop-player run cmd "/gamemode adventure @a" as op
+				make loop-player run cmd "/clear @a" as op
+				stop
+	else:
+		stop
+
+command /종료:
+	trigger:
+		if sender is op:
+			send title "&a강제 종료" with subtitle "&7관리자가 게임을 강제로 종료했습니다!" to all players for 5 seconds
+			delete {초}
+			delete {인원}
+			loop all players:
+				delete {%loop-player%.머더}
+			make player run cmd "/tp @a 2480 113 -1240" as op
+			make player run cmd "/gamemode adventure @a" as op
+			make player run cmd "/clear @a" as op
+			stop
+		else if sender is console:
+			send title "&a강제 종료" with subtitle "&7관리자가 게임을 강제로 종료했습니다!" to all players for 5 seconds
+			delete {초}
+			delete {인원}
+			loop all players:
+				delete {%loop-player%.머더}
+			make player run cmd "/tp @a 2480 113 -1240" as op
+			make player run cmd "/gamemode adventure @a" as op
+			make player run cmd "/clear @a" as op
+			stop
+		else
+			send "&c당신은 권한을 가지고 있지 않습니다."
+
+command /타이머:
+	trigger:
+		delete {초}
+
+command /시작:
+	trigger:
+		make player run cmd "/tp @a 2462 119 -1240 90 0" as op
+		wait 1 seconds
+		send title "{@Spy}" with subtitle "&b5초&f 후에 스파이 뽑기 결과가 발표됩니다." to all players for 3 seconds
+		play sound "ui_button_click" with volume 100 and pitch 1 at all players
+		send "%nl%&a&7[&c주의사항&7]%nl%&f해당 게임은 트롤 감지를 위해 %nl%게임 시작후 3초 이내에 총을 발사하시면 강제로 추방됩니다.%nl%" to all players
+		wait 1 seconds
+		send title "{@Spy}" with subtitle "&a4초&f 후에 스파이 뽑기 결과가 발표됩니다." to all players for 3 seconds
+		play sound "ui_button_click" with volume 100 and pitch 1 at all players
+		wait 1 seconds
+		send title "{@Spy}" with subtitle "&e3초&f 후에 스파이 뽑기 결과가 발표됩니다." to all players for 3 seconds
+		play sound "ui_button_click" with volume 100 and pitch 1 at all players
+		wait 1 seconds
+		send title "{@Spy}" with subtitle "&62초&f 후에 스파이 뽑기 결과가 발표됩니다." to all players for 3 seconds
+		play sound "ui_button_click" with volume 100 and pitch 1 at all players
+		wait 1 seconds
+		send title "{@Spy}" with subtitle "&c1초&f 후에 스파이 뽑기 결과가 발표됩니다." to all players for 3 seconds
+		play sound "ui_button_click" with volume 100 and pitch 1 at all players
+		wait 1 seconds
+		set {_list::*} to all players
+		set {_player} to random integer between 1 and size of {_list::*}
+		send title "&a마피아" with subtitle "스파이를 찾아 죽여 승리하십시오." to all players for 5 seconds
+		send "%nl%&a당신의 역할&f은 조직의 &a마피아&f입니다.%nl%당신은 조직의 마피아로 숨어있는 &c스파이&f를 찾아내어 &c살해&f하시면 승리합니다.%nl%" to all players
+		send title "&c스파이" with subtitle "모든 마피아를 살해하고 승리하십시오." to {_list::%{_player}%} for 5 seconds
+		send "%nl%%nl%%nl%%nl%%nl%%nl%%nl%%nl%%nl%%nl%%nl%&a당신의 역할&f은 &c스파이&f입니다.%nl%당신은 &a모든 마피아&f를 &c살해&f하면 승리합니다." to {_list::%{_player}%}
+		set slot 2 of {_list::%{_player}%}'s inventory to iron sword named "&7스파이의 검" with lore "&7모든 마피아를 살해하라."
+		set slot 3 of {_list::%{_player}%}'s inventory to ender eye named "&e스파이의 정보력" with lore "&7마피아들의 위치를 볼 수 있다.%nl%%nl%&7우) 발광"
+		loop all players:
+			set {트롤감지.%loop-player%} to 1
+		set {초} to 600
+		set {인원} to number of all players
+		set {%{_list::%{_player}%}%.머더} to 1
+		loop all players:
+			set slot 1 of loop-player's inventory to book named "&7권총" with lore "&l&7단 1발 밖에 쏘지 못하는 권총.%nl%%nl%&l&7사정거리 : 10칸%nl%&l&7공격력 : 999%nl%%nl%&7우) 발사"
+		wait 3 seconds
+		loop all players:
+			delete {트롤감지.%loop-player%}
